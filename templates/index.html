@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Event Page Generator</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="page">
+
+        <section class="builder-card">
+
+            <header class="app-header">
+                <span class="badge">Event Builder</span>
+                <h1>Event Page Generator</h1>
+                <p class="subtitle">Fill in the details below and generate a polished, shareable event landing page in
+                    seconds.</p>
+            </header>
+
+            <form id="eventForm" class="event-form" novalidate>
+
+                <div class="field">
+                    <label for="eventName">Event Name</label>
+                    <input type="text" id="eventName" placeholder="e.g. Annual Tech Summit 2026" required>
+                    <span class="error-message" data-error-for="eventName"></span>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="eventDate">Date</label>
+                        <input type="date" id="eventDate" required>
+                        <span class="error-message" data-error-for="eventDate"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="eventTime">Time</label>
+                        <input type="time" id="eventTime" required>
+                        <span class="error-message" data-error-for="eventTime"></span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="eventVenue">Venue</label>
+                    <input type="text" id="eventVenue" placeholder="e.g. Grand Convention Center, Hall A" required>
+                    <span class="error-message" data-error-for="eventVenue"></span>
+                </div>
+
+                <div class="field">
+                    <label for="eventDescription">Description</label>
+                    <textarea id="eventDescription" placeholder="Describe your event, agenda, and highlights"
+                        required></textarea>
+                    <span class="error-message" data-error-for="eventDescription"></span>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="organizerName">Organizer Name</label>
+                        <input type="text" id="organizerName" placeholder="e.g. Jane Doe / Acme Events" required>
+                        <span class="error-message" data-error-for="organizerName"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="contactInfo">Contact Information</label>
+                        <input type="text" id="contactInfo" placeholder="e.g. events@acme.com / +1 555 0100" required>
+                        <span class="error-message" data-error-for="contactInfo"></span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Generate Event Page</button>
+                    <button type="button" id="copyBtn" class="btn-secondary" disabled>Copy Event Page</button>
+                    <button type="button" id="resetBtn" class="btn-secondary">Clear Form</button>
+                </div>
+
+            </form>
+
+        </section>
+
+        <div class="preview-wrap">
+            <span class="live-badge">Live Preview</span>
+            <div id="preview" class="preview" aria-live="polite">
+                <div class="preview-placeholder">
+                    <span class="placeholder-icon">🎟️</span>
+                    <p>Start filling in the details above to see your event page come to life here.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>
