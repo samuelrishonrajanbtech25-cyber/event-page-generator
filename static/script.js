@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const preview = document.getElementById("preview");
     const resetBtn = document.getElementById("resetBtn");
     const copyBtn = document.getElementById("copyBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
     const toast = document.getElementById("toast");
 
     // Field id -> friendly label used in validation messages.
@@ -171,6 +172,66 @@ document.addEventListener("DOMContentLoaded", function () {
         ].join("\n");
     }
 
+    // Turn an event name into a safe .html filename, e.g. "Tech Summit 2026!" -> "tech-summit-2026.html".
+    function sanitizeFilename(name) {
+        let base = (name || "").toLowerCase().trim()
+            .replace(/[^a-z0-9]+/g, "-") // non-alphanumerics -> hyphen
+            .replace(/^-+|-+$/g, "");    // trim leading/trailing hyphens
+        if (!base) base = "event";
+        return base.slice(0, 80) + ".html";
+    }
+
+    // Self-contained styles for the downloaded page (subset that matches the on-screen event card).
+    const DOWNLOAD_STYLES = `
+        *{box-sizing:border-box;}
+        body{margin:0;padding:40px 20px;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+            line-height:1.65;color:#0f172a;
+            background:linear-gradient(160deg,#0f172a,#1e1b4b);min-height:100vh;}
+        .event-card{max-width:820px;margin:0 auto;background:#fff;border-radius:18px;
+            box-shadow:0 30px 60px rgba(15,23,42,.22);overflow:hidden;}
+        .event-hero{position:relative;padding:56px 44px;color:#fff;overflow:hidden;
+            background:radial-gradient(600px 300px at 100% 0%,rgba(236,72,153,.55),transparent 60%),
+            linear-gradient(125deg,#4f46e5,#06b6d4);}
+        .event-hero .kicker{font-size:.72rem;font-weight:700;letter-spacing:.16em;
+            text-transform:uppercase;opacity:.9;}
+        .event-hero h2{margin:12px 0 0;font-size:2.6rem;font-weight:800;line-height:1.12;
+            letter-spacing:-.02em;word-break:break-word;}
+        .event-meta{margin-top:24px;display:flex;flex-wrap:wrap;gap:12px;}
+        .meta-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.18);
+            border:1px solid rgba(255,255,255,.25);padding:9px 15px;border-radius:999px;
+            font-size:.92rem;font-weight:500;}
+        .event-body{padding:40px 44px 44px;}
+        .event-section{margin-bottom:32px;}
+        .event-section:last-child{margin-bottom:0;}
+        .section-title{margin:0 0 12px;font-size:.78rem;font-weight:700;letter-spacing:.1em;
+            text-transform:uppercase;color:#4f46e5;}
+        .event-section p{margin:0;white-space:pre-wrap;word-break:break-word;color:#334155;font-size:1.02rem;}
+        .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:28px;
+            margin-top:28px;border-top:1px solid #e2e8f0;}
+        .detail-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;}
+        .detail-card .label{font-size:.72rem;font-weight:700;letter-spacing:.1em;
+            text-transform:uppercase;color:#64748b;margin:0 0 6px;}
+        .detail-card .value{margin:0;font-weight:600;color:#0f172a;word-break:break-word;}
+        @media(max-width:640px){.event-hero{padding:40px 26px;}.event-hero h2{font-size:2rem;}
+            .event-body{padding:30px 26px 34px;}.detail-grid{grid-template-columns:1fr;}}
+    `;
+
+    // Build a standalone HTML document (event markup + inline styles) for download.
+    function buildStandaloneHTML(data) {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(data.name)}</title>
+<style>${DOWNLOAD_STYLES}</style>
+</head>
+<body>
+${buildEventHTML(data)}
+</body>
+</html>`;
+    }
+
     function showToast(message, isError) {
         toast.textContent = message;
         toast.classList.toggle("toast-error", !!isError);
@@ -187,9 +248,11 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isComplete(data)) {
             preview.innerHTML = buildEventHTML(data);
             copyBtn.disabled = false;
+            downloadBtn.disabled = false;
         } else {
             preview.innerHTML = placeholderHTML;
             copyBtn.disabled = true;
+            downloadBtn.disabled = true;
         }
     }
 
@@ -221,6 +284,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const data = getData();
         preview.innerHTML = buildEventHTML(data);
         copyBtn.disabled = false;
+        downloadBtn.disabled = false;
         showToast("Event page generated!");
         preview.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -232,6 +296,7 @@ document.addEventListener("DOMContentLoaded", function () {
         hasGenerated = false;
         preview.innerHTML = placeholderHTML;
         copyBtn.disabled = true;
+        downloadBtn.disabled = true;
         showToast("Form cleared.");
     });
 
@@ -268,6 +333,29 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             fallbackCopy();
         }
+    });
+
+    // --- Download HTML button ---
+    downloadBtn.addEventListener("click", function () {
+        const data = getData();
+        if (!isComplete(data)) {
+            showToast("Nothing to download yet — complete the form first.", true);
+            return;
+        }
+
+        const html = buildStandaloneHTML(data);
+        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = sanitizeFilename(data.name);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast("Event page downloaded!");
     });
 
 });
